@@ -1,5 +1,6 @@
 
 var DEBUG = true;
+var INTERVAL_TIME = 800;
 
 (function() {
   /**
@@ -19,12 +20,14 @@ var DEBUG = true;
    * Default initial state.
    *
    **/
-  var defaultState = {
+  var state = {
+    direction: 38,
+    interval: null,
+    positions: [],
     startingPos: {
       x: 4,
       y: 3,
     },
-    positions: [],
   };
 
   /**
@@ -53,14 +56,14 @@ var DEBUG = true;
    * @name getStartingPos
    * @description
    *
-   * Returns starting position from defaultState.
+   * Returns starting position from state.
    *
    * @returns {Object} startingPos - x and y positions
    *
    **/
   function getStartingPos() {
-    log('getStartingPos');
-    return defaultState.startingPos;
+    //log('getStartingPos');
+    return state.startingPos;
   }
 
   /**
@@ -68,14 +71,14 @@ var DEBUG = true;
    * @name getCurrentPos
    * @description
    *
-   * Returns current position from defaultState.
+   * Returns current position from state.
    *
    * @returns {Object} positions[last] - x and y positions
    *
    **/
   function getCurrentPos() {
-    log('getCurrentPos');
-    return defaultState.positions[defaultState.positions.length - 1];
+    //log('getCurrentPos');
+    return state.positions[state.positions.length - 1];
   }
 
   /**
@@ -83,14 +86,41 @@ var DEBUG = true;
    * @name setCurrentPos
    * @description
    *
-   * Set new position on defaultState.
+   * Set new position on state.
    *
    * @param {Object} newPos - Object with new x and y positions
    *
    **/
   function setCurrentPos(newPos) {
     log('setCurrentPos');
-    defaultState.positions.push(newPos);
+    state.positions.push(newPos);
+  }
+
+  /**
+   *
+   * @name changeDirection
+   * @description
+   *
+   * Set new direction with last key pressed.
+   *
+   **/
+  function changeDirection(dir) {
+    log('changeDirection');
+    state.direction = dir;
+  }
+
+  /**
+   *
+   * @name saveInterval
+   * @description
+   *
+   *
+   * @param {Function} interval - Setted interval
+   *
+   **/
+  function saveInterval(interval) {
+    log('saveInterval');
+    state.interval = interval;
   }
 
   /**
@@ -116,27 +146,32 @@ var DEBUG = true;
     40: moveDown,
   };
 
-  // Movements
+  /**
+   * 
+   * @name move${Direction}
+   * @description
+   *
+   * Call move with the correct parameters.
+   * This might not be necessary.
+   *
+   **/
   function moveLeft() {
-    log('moveLeft');
+    //log('moveLeft');
 
     return move(0, -1);
   }
-
   function moveRight() {
-    log('moveRight');
+    //log('moveRight');
 
     return move(0, 1);
   }
-
   function moveDown() {
-    log('moveDown');
+    //log('moveDown');
 
     return move(1, 0);
   }
-
   function moveUp() {
-    log('moveUp');
+    //log('moveUp');
 
     return move(-1, 0);
   }
@@ -156,17 +191,17 @@ var DEBUG = true;
    *
    **/
   function move(x, y) {
+    //log('move');
     var current = getCurrentPos();
 
+    var next = {
+      x: current.x + x,
+      y: current.y + y,
+    }
+
     return {
-      current: {
-        x: current.x,
-        y: current.y,
-      },
-      next: {
-        x: current.x + x,
-        y: current.y + y,
-      }
+      current: current,
+      next: next,
     }
   }
 
@@ -181,13 +216,14 @@ var DEBUG = true;
    * @param {Object} evnt - Event object.
    *
    **/
-  function controller(evnt) {
-    var key = evnt.keyCode;
+  function controller(key) {
+    //log('controller');
 
     if (keys[key]) {
       var newState = keys[key]();
 
       if (hitDetection(newState.next)) {
+        changeDirection(key);
         clean(newState.current);
         updatePosition(newState.next);
       } else {
@@ -196,7 +232,13 @@ var DEBUG = true;
     }
   };
 
-  document.addEventListener('keydown', controller);
+  function detectKeyDown(evnt) {
+    //log('detectKeyDown');
+    //delayLoop();
+    controller(evnt.keyCode);
+  }
+
+  document.addEventListener('keydown', detectKeyDown);
 
   /**
    *
@@ -210,6 +252,7 @@ var DEBUG = true;
    * @returns {Boolean|Object}
    **/
   function hitDetection(next) {
+    //log('hitDetection');
     var nextSpace = matrix[next.x][next.y];
 
     if (nextSpace === '1') {
@@ -228,7 +271,7 @@ var DEBUG = true;
    *
    **/
   function clean(pos) {
-    log('clean');
+    //log('clean');
     matrix[pos.x][pos.y] = '0';
     var app = document.getElementById('app');
     app.innerHTML = '';
@@ -247,7 +290,7 @@ var DEBUG = true;
    *
    **/
   function render(matrix) {
-    log('render');
+    //log('render');
     var app = document.getElementById('app');
     var cont = document.createElement('div');
 
@@ -278,12 +321,40 @@ var DEBUG = true;
    *
    **/
   function updatePosition(pos) {
-    log('updatePosition');
+    //log('updatePosition');
     setCurrentPos(pos);
     matrix[pos.x][pos.y] = 'S';
     render(matrix);
   }
 
-  updatePosition(getStartingPos());
+  function loop() {
+    log('loop');
+
+    controller(state.direction);
+  }
+
+  function startLoop() {
+    log('startLoop');
+    var interval = setInterval(function() {
+      loop();
+    }, INTERVAL_TIME);
+
+    saveInterval(interval);
+  }
+
+  function delayLoop() {
+    log('delayLoop');
+    clearInterval(state.interval);
+
+    setTimeout(function() {
+      startLoop();
+    }, 100);
+  }
+
+  (function init() {
+    log('init');
+    updatePosition(getStartingPos());
+    //startLoop();
+  })();
 })();
 
