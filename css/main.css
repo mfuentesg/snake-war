@@ -1,0 +1,23 @@
+
+.row {
+  height: 20px;
+}
+
+.block {
+  float: left;
+  height: 20px;
+  width: 20px;
+}
+
+.wall {
+  background-color: black;
+}
+
+.free {
+  background-color: grey;
+}
+
+.snake {
+  background-color: green;
+}
+
