@@ -1,67 +1,8 @@
 
-var DEBUG = true;
+var DEBUG = false;
 
 (function() {
-  /**
-   *
-   * Global use of console.log so it
-   * can be easily turned off.
-   *
-   **/
-  function log(content) {
-    if (DEBUG) {
-      console.log(content);
-    }
-  }
-
-  /**
-   *
-   * Default initial state.
-   *
-   **/
-  var defaultState = {
-    startingPos: {
-      x: 4,
-      y: 3,
-    },
-    positions: [],
-  };
-
-  /**
-   *
-   * Testing matrix, this should come from a config file or be dynamically
-   * generated or something.
-   *
-   **/
-  var matrix = [
-    ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'],
-    ['1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1'],
-    ['1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1'],
-    ['1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1'],
-    ['1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1'],
-    ['1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1'],
-    ['1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1'],
-    ['1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1'],
-    ['1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1'],
-    ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1']
-  ];
-
   // State Methods
-
-  /**
-   *
-   * @name getStartingPos
-   * @description
-   *
-   * Returns starting position from defaultState.
-   *
-   * @returns {Object} startingPos - x and y positions
-   *
-   **/
-  function getStartingPos() {
-    log('getStartingPos');
-    return defaultState.startingPos;
-  }
 
   /**
    *
@@ -102,6 +43,7 @@ var DEBUG = true;
     '0': 'free',
     '1': 'wall',
     'S': 'snake',
+    'P': 'pellet',
   }
 
   /**
@@ -216,6 +158,10 @@ var DEBUG = true;
       return false;
     }
 
+    if (nextSpace === 'P') {
+      addPart();
+    }
+
     return next;
   }
 
@@ -280,10 +226,59 @@ var DEBUG = true;
   function updatePosition(pos) {
     log('updatePosition');
     setCurrentPos(pos);
-    matrix[pos.x][pos.y] = 'S';
+
+    console.log(defaultState);
+    var positions = defaultState.positions;
+
+    if (positions.length > 1 && defaultState.snakeLength > 1) {
+      for (var i = defaultState.snakeLength; i > 0; i--) {
+        console.log('hola');
+        matrix[positions[i].x][positions[i].y] = 'S';
+      }
+    } else {
+      matrix[pos.x][pos.y] = 'S';
+    }
+
     render(matrix);
   }
 
-  updatePosition(getStartingPos());
+  /**
+   *
+   * @name createPellet
+   * @description
+   *
+   * Create a pellet randomly somewhere.
+   *
+   **/
+  function createPellet() {
+    log('createPellet');
+    var x = Math.ceil(Math.random() * matrix.length - 1);
+    var y = Math.ceil(Math.random() * matrix[0].length - 1);
+    var pos = matrix[x][y];
+
+    if (pos === '1') {
+      createPellet();
+    } else {
+      matrix[x][y] = 'P';
+    }
+  }
+
+  /**
+   *
+   * @name addPart
+   * @description
+   *
+   *
+   **/
+  function addPart() {
+    log('addPart');
+    defaultState.snakeLength += 1;
+    createPellet();
+  }
+
+  (function init() {
+    //createPellet();
+    updatePosition(getStartingPos());
+  })();
 })();
 
